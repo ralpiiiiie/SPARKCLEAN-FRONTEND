@@ -1,0 +1,288 @@
+@import "tailwindcss";
+
+/* Class-based dark mode driven by the app store's `.dark` wrapper */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* ── Brand ── */
+  /* Navy: trust, headings, solid primary actions */
+  --color-navy: #123b70;
+  --color-navy-hover: #0e2f5b;
+  --color-navy-dark: #0b2447;
+  --color-navy-light: #dce8f6;
+
+  /* Primary: Spark Clean deep blue */
+  --color-primary: #07519b;
+  --color-primary-hover: #053d75;
+  --color-primary-light: #e3edf8;
+  --color-primary-dark: #0a3a6e;
+
+  /* Supporting brand hues: bright blue + fresh green */
+  --color-aqua: #168bd2;
+  --color-aqua-light: #e1f1fb;
+  --color-teal: #168a3b;
+  --color-teal-light: #ddf3e3;
+
+  /* ── Semantic / analytics-stage coding ── */
+  --color-success: #20b84b;
+  --color-success-hover: #168a3b;
+  --color-success-light: #dcf7e4;
+  --color-success-dark: #0f5f2a;
+
+  --color-purple: #8b5cf6;
+  --color-purple-hover: #7c3aed;
+  --color-purple-light: #ede9fe;
+  --color-purple-dark: #5b21b6;
+
+  --color-warning: #f59e0b;
+  --color-warning-hover: #d97706;
+  --color-warning-light: #fef3c7;
+  --color-warning-dark: #92400e;
+
+  --color-coral: #ef4444;
+  --color-coral-hover: #dc2626;
+  --color-coral-light: #fee2e2;
+  --color-coral-dark: #991b1b;
+
+  --color-sunshine: #fbbf24;
+
+  /* ── Surfaces & borders ── */
+  --color-canvas: #f3f5f7;
+  --color-canvas-dark: #0b1220;
+  --color-sidebar: #0f1929;
+  --color-card-dark: #131f30;
+  --color-elevated-dark: #19283b;
+  --color-border-dark: #28384a;
+
+  --color-surface: #ffffff;
+  --color-surface-hover: #f0f4f8;
+  --color-surface-muted: #eef2f6;
+  --color-border: #e4e9ef;
+  --color-border-muted: #eef2f6;
+
+  /* ── Text ── */
+  --color-text-primary: #17212f;
+  --color-text-secondary: #52606f;
+  --color-text-muted: #8a94a3;
+  --color-text-inverse: #ffffff;
+
+  /* ── Typography ── */
+  --font-display: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* ── Elevation ── */
+  --shadow-card: 0 1px 2px rgba(18, 59, 112, 0.04), 0 8px 24px -12px rgba(18, 59, 112, 0.12);
+  --shadow-card-hover: 0 2px 4px rgba(18, 59, 112, 0.05), 0 18px 40px -16px rgba(18, 59, 112, 0.22);
+  --shadow-float: 0 24px 60px -20px rgba(18, 59, 112, 0.35);
+
+  /* ── Radii ── */
+  --radius-card: 1.25rem;
+}
+
+:root {
+  /* Chart theme (consumed by Recharts via CSS variables) */
+  --chart-grid: #e7ecf1;
+  --chart-axis: #8a94a3;
+  --chart-tooltip-bg: #ffffff;
+  --chart-tooltip-border: #e4e9ef;
+  --chart-tooltip-text: #17212f;
+}
+
+.dark {
+  --chart-grid: #1e2c3f;
+  --chart-axis: #7d8ea3;
+  --chart-tooltip-bg: #131f30;
+  --chart-tooltip-border: #28384a;
+  --chart-tooltip-text: #f1f5f9;
+}
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-canvas font-body text-slate-900 antialiased dark:bg-canvas-dark dark:text-slate-100;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-semibold tracking-tight;
+    text-wrap: balance;
+  }
+
+  /* Subtle, consistent scrollbars */
+  ::-webkit-scrollbar {
+    @apply h-2 w-2;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-slate-300 dark:bg-slate-700;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400 dark:bg-slate-600;
+  }
+
+  :focus-visible {
+    outline: none;
+  }
+}
+
+@layer components {
+  .surface-card {
+    @apply rounded-[var(--radius-card)] border border-slate-200/80 bg-white shadow-[var(--shadow-card)] dark:border-border-dark dark:bg-card-dark;
+  }
+
+  .section-eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.14em] text-primary dark:text-aqua;
+  }
+
+  /* Reusable focus ring for interactive elements */
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas dark:focus-visible:ring-offset-canvas-dark;
+  }
+
+  .card-hover {
+    @apply transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[var(--shadow-card-hover)];
+  }
+
+  .card-hover-subtle {
+    @apply transition duration-200 hover:border-primary/10 hover:shadow-[var(--shadow-card-hover)];
+  }
+
+  .table-cell {
+    @apply border-t border-slate-100 px-4 py-3 text-sm text-slate-700 dark:border-slate-800 dark:text-slate-300;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary via-aqua to-teal bg-clip-text text-transparent;
+  }
+}
+
+@layer utilities {
+  /* Brand gradients inspired by the logo */
+  .bg-brand-gradient {
+    background-image: linear-gradient(115deg, #07519b 0%, #168bd2 48%, #20b84b 100%);
+  }
+
+  .bg-blue-gradient {
+    background-image: linear-gradient(135deg, #123b70 0%, #168bd2 100%);
+  }
+
+  .bg-green-gradient {
+    background-image: linear-gradient(135deg, #168a3b 0%, #35c759 100%);
+  }
+
+  .bg-brand-gradient-bar {
+    background-image: linear-gradient(180deg, #168bd2 0%, #20b84b 100%);
+  }
+
+  /* Subtle glass surfaces: top bar, menus, floating panels */
+  .glass-bar {
+    @apply border-b border-white/60 bg-white/80 backdrop-blur-xl dark:border-white/5 dark:bg-[rgba(19,31,48,0.82)];
+  }
+
+  .glass-panel {
+    @apply border border-white/65 bg-[rgba(255,255,255,0.88)] backdrop-blur-xl dark:border-white/10 dark:bg-[rgba(19,31,48,0.9)];
+  }
+
+  .glass {
+    @apply border border-white/40 bg-white/70 backdrop-blur-xl dark:border-white/5 dark:bg-[rgba(19,31,48,0.78)];
+  }
+
+  /* Status dot */
+  .status-dot {
+    @apply inline-block h-2 w-2 rounded-full;
+  }
+
+  /* Loading shimmer for skeletons */
+  .skeleton {
+    @apply relative overflow-hidden rounded-xl bg-slate-200/70 dark:bg-slate-800/70;
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.45),
+      transparent
+    );
+    animation: shimmer 1.6s infinite;
+  }
+  .dark .skeleton::after {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.06),
+      transparent
+    );
+  }
+
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .animate-rise {
+    animation: rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Horizontal progress fill that grows in from its start edge */
+  .bar-grow {
+    transform-origin: left center;
+    animation: bar-grow 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes bar-grow {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  /* Stagger helpers */
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.10s; }
+  .stagger-3 { animation-delay: 0.15s; }
+  .stagger-4 { animation-delay: 0.20s; }
+  .stagger-5 { animation-delay: 0.25s; }
+}
+
+/* Respect the OS reduced-motion preference for CSS-driven motion.
+   Framer Motion is handled by MotionConfig reducedMotion="user". */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .skeleton::after {
+    animation: none;
+  }
+}
