@@ -87,8 +87,11 @@ export interface AiUser {
   id: number;
   username: string;
   email: string;
-  role: "admin" | "analyst";
+  role: "admin" | "analyst" | "manager";
   roleLevel: number;
+  branchId: string | null;
+  branchName: string | null;
+  branchCity: string | null;
 }
 
 export interface AiLoginResponse {

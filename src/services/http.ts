@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { getAuthToken } from "./authToken";
+import { getAuthToken, setAuthToken } from "./authToken";
 
 /** Base URL for the Spark Clean REST API. */
 export const API_BASE_URL = (
@@ -43,13 +43,23 @@ interface RequestOptions {
 
 let coldStartWarned = false;
 
+/** Ask the auth store to drop the session and let the router show /login. */
+function notifyUnauthorized(): void {
+  try {
+    window.dispatchEvent(new Event("spark:unauthorized"));
+  } catch {
+    // Non-browser environments (tests) can skip the event.
+  }
+}
+
 /** Raw fetch with the API's `{ error: { code, message } }` envelope unwrapped. */
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = "GET", body, signal } = options;
 
   const headers: Record<string, string> = {};
   if (body !== undefined) headers["Content-Type"] = "application/json";
-  // Only the AI endpoints require a bearer token; other routes ignore it.
+  // Every protected endpoint requires the session token; the server decides
+  // what that account may read.
   const token = getAuthToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
@@ -84,6 +94,11 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   const text = await response.text();
   const payload: unknown = text ? safeJson(text) : null;
 
+  if (response.status === 401 && token && path !== "/auth/login") {
+    setAuthToken(null);
+    notifyUnauthorized();
+  }
+
   if (!response.ok) {
     const envelope = payload as { error?: { code?: string; message?: string; details?: unknown } } | null;
     throw new ApiError(
@@ -107,7 +122,17 @@ function safeJson(text: string): unknown {
 
 /** Triggers a browser download for CSV and other exported endpoints. */
 export async function download(path: string, filename: string): Promise<number> {
-  const response = await fetch(`${API_BASE_URL}${path}`);
+  const token = getAuthToken();
+  const headers: Record<string, string> = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const response = await fetch(`${API_BASE_URL}${path}`, { headers });
+
+  if (response.status === 401 && token) {
+    setAuthToken(null);
+    notifyUnauthorized();
+  }
+
   if (!response.ok) {
     throw new ApiError(response.status, "DOWNLOAD_FAILED", `Export failed (${response.status})`);
   }

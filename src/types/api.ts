@@ -461,6 +461,12 @@ export interface BaReport {
 /* ── Dashboard ── */
 
 export interface DashboardSummary {
+  filters: {
+    dateFrom: string | null;
+    dateTo: string | null;
+    branchId: string | null;
+    serviceId: string | null;
+  };
   kpis: {
     orders: number;
     revenue: number;
@@ -475,8 +481,18 @@ export interface DashboardSummary {
   };
   statusBreakdown: Record<string, number>;
   monthly: { key: string; month: string; orders: number; revenue: number; aov: number }[];
+  daily: { date: string; label: string; orders: number; revenue: number }[];
   serviceMix: { name: string; orders: number; revenue: number }[];
-  recentOrders: Order[];
+  paymentMix: { method: string; orders: number; revenue: number; sharePct: number }[];
+  topCustomers: { name: string; orders: number; revenue: number; lastOrderDate: string }[];
+  recentOrders: Array<
+    Order & {
+      customer?: string;
+      service?: string;
+      branch?: string;
+      branchId?: string;
+    }
+  >;
 }
 
 export type { Branch, BranchMonthlyDemand, Customer, MarketingCampaign, Order, Plant, PlantDelivery, Service, DeliveryCostMatrix };

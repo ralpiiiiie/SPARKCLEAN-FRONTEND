@@ -17,17 +17,16 @@ import { EASE_OUT } from "../ui/motion";
 import { cn } from "../../lib/utils";
 import { ApiError, errorMessage } from "../../services/http";
 import * as aiService from "../../services/ai";
+import { useAuthStore } from "../../store/auth";
 import type {
   AiAnswer,
   AiConversationSummary,
   AiPageContext,
   AiStoredMessage,
-  AiUser,
 } from "../../types/ai";
 import { AiAnswerCard } from "./AiAnswerCard";
 import { AiComposer } from "./AiComposer";
 import { AiHistory } from "./AiHistory";
-import { AiSignIn } from "./AiSignIn";
 import { pageContextFromPath } from "./format";
 
 type ChatMessage =
@@ -35,12 +34,22 @@ type ChatMessage =
   | { id: string; role: "assistant"; answer: AiAnswer }
   | { id: string; role: "error"; text: string; question: string };
 
-const SUGGESTIONS = [
+const ADMIN_SUGGESTIONS = [
   "What was our revenue last month?",
   "Compare this month with last month",
   "How many orders are still pending?",
   "What is our most popular service?",
   "Which branch earns the most revenue?",
+  "What should we improve based on our data?",
+];
+
+/** Branch managers only receive questions their branch can answer. */
+const MANAGER_SUGGESTIONS = [
+  "What was our revenue last month?",
+  "Compare this month with last month",
+  "How many orders are still pending?",
+  "What is our most popular service?",
+  "Which customers order most often?",
   "What should we improve based on our data?",
 ];
 
@@ -83,10 +92,11 @@ export function AiAssistant() {
   const { pathname } = useLocation();
   const pageContext: AiPageContext = pageContextFromPath(pathname) as AiPageContext;
   const reduced = useReducedMotion();
+  const { user, signOut: signOutSession } = useAuthStore();
+  const isManager = user?.role === "manager";
+  const suggestions = isManager ? MANAGER_SUGGESTIONS : ADMIN_SUGGESTIONS;
 
   const [open, setOpen] = useState(false);
-  const [user, setUser] = useState<AiUser | null>(null);
-  const [checkingSession, setCheckingSession] = useState(() => aiService.hasSession());
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [conversationId, setConversationId] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
@@ -96,26 +106,6 @@ export function AiAssistant() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
-
-  /* Validate an existing tab session when the panel is first opened. */
-  useEffect(() => {
-    if (!open || user || !aiService.hasSession()) return;
-    let active = true;
-    aiService
-      .me()
-      .then((profile) => {
-        if (active) setUser(profile);
-      })
-      .catch(() => {
-        if (active) setUser(null);
-      })
-      .finally(() => {
-        if (active) setCheckingSession(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [open, user]);
 
   /* Escape closes history first, then the panel. */
   useEffect(() => {
@@ -174,7 +164,7 @@ export function AiAssistant() {
       } catch (error) {
         if (controller.signal.aborted) return;
         if (error instanceof ApiError && error.status === 401) {
-          setUser(null);
+          // The global handler drops the session and returns to /login.
           setMessages([]);
           setConversationId(null);
           return;
@@ -204,12 +194,12 @@ export function AiAssistant() {
 
   function signOut() {
     abortRef.current?.abort();
-    aiService.logout();
-    setUser(null);
+    setOpen(false);
     setMessages([]);
     setConversationId(null);
     setHistoryOpen(false);
     setBusy(false);
+    void signOutSession();
   }
 
   function openHistory() {
@@ -218,9 +208,8 @@ export function AiAssistant() {
     aiService
       .listConversations()
       .then(setHistoryItems)
-      .catch((error) => {
-        if (error instanceof ApiError && error.status === 401) setUser(null);
-        else toast.error("Could not load conversation history.");
+      .catch(() => {
+        toast.error("Could not load conversation history.");
       })
       .finally(() => setHistoryLoading(false));
   }
@@ -234,8 +223,7 @@ export function AiAssistant() {
       setConversationId(id);
       setHistoryOpen(false);
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) setUser(null);
-      else toast.error(friendlyError(error));
+      toast.error(friendlyError(error));
     } finally {
       setHistoryLoading(false);
     }
@@ -250,9 +238,8 @@ export function AiAssistant() {
         setConversationId(null);
       }
       toast.success("Conversation deleted.");
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 401) setUser(null);
-      else toast.error("Could not delete that conversation.");
+    } catch {
+      toast.error("Could not delete that conversation.");
     }
   }
 
@@ -305,7 +292,9 @@ export function AiAssistant() {
                 <p className="font-display text-[13.5px] font-semibold leading-tight">Spark AI Assistant</p>
                 <p className="mt-0.5 flex items-center gap-1 text-[10px] text-white/75">
                   <ShieldCheck className="h-2.5 w-2.5" aria-hidden />
-                  Read-only · answers from recorded data
+                  {isManager
+                    ? `Read-only · ${user?.branchName ?? "your branch"} branch data`
+                    : "Read-only · answers from recorded data"}
                 </p>
               </div>
               {user && (
@@ -353,16 +342,18 @@ export function AiAssistant() {
             {/* Body */}
             <div className="relative flex min-h-0 flex-1 flex-col">
               {!user ? (
-                checkingSession ? (
-                  <div className="flex flex-1 items-center justify-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
-                    Checking your session…
-                  </div>
-                ) : (
-                  <div className="flex min-h-0 flex-1 overflow-y-auto">
-                    <AiSignIn onSignedIn={setUser} />
-                  </div>
-                )
+                <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary dark:bg-aqua/15 dark:text-aqua">
+                    <ShieldCheck className="h-5 w-5" aria-hidden />
+                  </span>
+                  <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                    Sign in required
+                  </p>
+                  <p className="max-w-[240px] text-[11.5px] leading-relaxed text-slate-500 dark:text-slate-400">
+                    Your Spark Clean session has ended. Sign in again to ask about your
+                    recorded data.
+                  </p>
+                </div>
               ) : (
                 <>
                   <div
@@ -379,16 +370,19 @@ export function AiAssistant() {
                           Hi {firstName}, what would you like to know?
                         </h3>
                         <p className="mt-1 text-[11.5px] leading-relaxed text-slate-500 dark:text-slate-400">
-                          I can explain revenue, orders, customers, services, branches and payments
-                          from the live Spark Clean records. Every answer shows the exact period it
-                          covers.
+                          I can explain revenue, orders, customers, services, payments
+                          {isManager ? "" : ", branches"} from the live Spark Clean records
+                          {isManager
+                            ? ` for the ${user?.branchName ?? "assigned"} branch only.`
+                            : "."}{" "}
+                          Every answer shows the exact period it covers.
                         </p>
 
                         <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
                           Suggested questions
                         </p>
                         <div className="mt-1.5 space-y-1.5">
-                          {SUGGESTIONS.map((question) => (
+                          {suggestions.map((question) => (
                             <button
                               key={question}
                               type="button"

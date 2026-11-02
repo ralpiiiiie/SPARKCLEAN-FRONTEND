@@ -10,11 +10,13 @@ import {
   Database,
   Settings,
   ChevronLeft,
+  Store,
   X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import logo from "../../assets/logo.png";
 import { cn } from "../../lib/utils";
+import { useAuthStore } from "../../store/auth";
 
 type Stage = "Descriptive" | "Predictive" | "Prescriptive";
 
@@ -30,7 +32,7 @@ interface NavGroup {
   items: NavItem[];
 }
 
-const groups: NavGroup[] = [
+const ADMIN_GROUPS: NavGroup[] = [
   {
     label: "Overview",
     items: [
@@ -52,6 +54,16 @@ const groups: NavGroup[] = [
     items: [
       { name: "Data Explorer", href: "/data", icon: Database },
       { name: "Settings", href: "/settings", icon: Settings },
+    ],
+  },
+];
+
+/** Branch managers only ever navigate within their own branch workspace. */
+const MANAGER_GROUPS: NavGroup[] = [
+  {
+    label: "Branch workspace",
+    items: [
+      { name: "Branch Dashboard", href: "/", icon: LayoutDashboard },
     ],
   },
 ];
@@ -153,9 +165,11 @@ function Brand({ collapsed }: { collapsed: boolean }) {
 
 function NavBody({
   collapsed,
+  groups,
   onNavigate,
 }: {
   collapsed: boolean;
+  groups: NavGroup[];
   onNavigate?: () => void;
 }) {
   return (
@@ -195,6 +209,10 @@ export function Sidebar({
   mobileOpen,
   onCloseMobile,
 }: SidebarProps) {
+  const { user } = useAuthStore();
+  const isManager = user?.role === "manager";
+  const groups = isManager ? MANAGER_GROUPS : ADMIN_GROUPS;
+
   return (
     <>
       {/* Desktop */}
@@ -221,7 +239,7 @@ export function Sidebar({
             </button>
           )}
         </div>
-        <NavBody collapsed={collapsed} />
+        <NavBody collapsed={collapsed} groups={groups} />
         <div className="border-t border-slate-200 p-3 dark:border-border-dark">
           {collapsed ? (
             <button
@@ -231,6 +249,22 @@ export function Sidebar({
             >
               <ChevronLeft className="h-4 w-4 rotate-180" />
             </button>
+          ) : isManager ? (
+            <div className="rounded-xl border border-primary/10 bg-primary/[0.06] p-3 dark:border-aqua/20 dark:bg-aqua/10">
+              <div className="flex items-center gap-2">
+                <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-aqua/15 dark:text-aqua">
+                  <Store className="h-3.5 w-3.5" aria-hidden />
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-100">
+                    {user?.branchName ?? "Assigned branch"}
+                  </p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                    {user?.branchId ?? "—"} · branch-scoped access
+                  </p>
+                </div>
+              </div>
+            </div>
           ) : (
             <div className="rounded-xl bg-slate-50 p-3 dark:bg-elevated-dark/60">
               <p className="text-center text-[11px] text-slate-500 dark:text-slate-400">
@@ -277,7 +311,7 @@ export function Sidebar({
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <NavBody collapsed={false} onNavigate={onCloseMobile} />
+              <NavBody collapsed={false} groups={groups} onNavigate={onCloseMobile} />
             </motion.aside>
           </>
         )}
