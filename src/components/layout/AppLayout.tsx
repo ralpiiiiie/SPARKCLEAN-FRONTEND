@@ -4,6 +4,7 @@ import { MotionConfig, motion } from "framer-motion";
 import { Sidebar } from "../ui/Sidebar";
 import { TopBar } from "../ui/TopBar";
 import { EASE_OUT } from "../ui/motion";
+import { AiAssistant } from "../ai/AiAssistant";
 import { useAppStore } from "../../store";
 
 interface AppLayoutProps {
@@ -45,6 +46,8 @@ export function AppLayout({ children }: AppLayoutProps) {
               </main>
             </div>
           </div>
+          {/* Global assistant: mounted once for every admin page. */}
+          <AiAssistant />
         </div>
       </div>
     </MotionConfig>

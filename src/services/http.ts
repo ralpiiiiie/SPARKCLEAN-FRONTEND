@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { getAuthToken } from "./authToken";
 
 /** Base URL for the Spark Clean REST API. */
 export const API_BASE_URL = (
@@ -46,12 +47,18 @@ let coldStartWarned = false;
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = "GET", body, signal } = options;
 
+  const headers: Record<string, string> = {};
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+  // Only the AI endpoints require a bearer token; other routes ignore it.
+  const token = getAuthToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+
   let response: Response;
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       method,
       signal,
-      headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+      headers,
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch (error) {
