@@ -6,17 +6,14 @@ import {
   BarChart3,
   TrendingUp,
   Boxes,
-  Workflow,
   Database,
   Settings,
   ChevronLeft,
-  Store,
   X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import logo from "../../assets/logo.png";
 import { cn } from "../../lib/utils";
-import { useAuthStore } from "../../store/auth";
 
 type Stage = "Descriptive" | "Predictive" | "Prescriptive";
 
@@ -32,13 +29,12 @@ interface NavGroup {
   items: NavItem[];
 }
 
-const ADMIN_GROUPS: NavGroup[] = [
+const NAV_GROUPS: NavGroup[] = [
   {
     label: "Overview",
     items: [
       { name: "Dashboard", href: "/", icon: LayoutDashboard },
       { name: "Case Study", href: "/case-study", icon: BookOpen },
-      { name: "BA Process", href: "/process", icon: Workflow },
     ],
   },
   {
@@ -54,16 +50,6 @@ const ADMIN_GROUPS: NavGroup[] = [
     items: [
       { name: "Data Explorer", href: "/data", icon: Database },
       { name: "Settings", href: "/settings", icon: Settings },
-    ],
-  },
-];
-
-/** Branch managers only ever navigate within their own branch workspace. */
-const MANAGER_GROUPS: NavGroup[] = [
-  {
-    label: "Branch workspace",
-    items: [
-      { name: "Branch Dashboard", href: "/", icon: LayoutDashboard },
     ],
   },
 ];
@@ -94,19 +80,13 @@ function NavLink({
       aria-current={isActive ? "page" : undefined}
       title={collapsed ? item.name : undefined}
       className={cn(
-        "focus-ring group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors",
+        "focus-ring group relative flex items-center gap-3 rounded-full px-3.5 py-2.5 text-sm transition-colors",
         collapsed && "justify-center px-0",
         isActive
-          ? "bg-primary/[0.08] font-semibold text-primary dark:bg-primary/15 dark:text-primary-light"
+          ? "bg-primary/[0.09] font-medium text-primary dark:bg-aqua/15 dark:text-aqua"
           : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-elevated-dark dark:hover:text-white",
       )}
     >
-      {isActive && (
-        <span
-          className="bg-brand-gradient-bar absolute top-1/2 left-0 h-6 w-[3px] -translate-y-1/2 rounded-full"
-          aria-hidden
-        />
-      )}
       <Icon
         className={cn(
           "h-5 w-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
@@ -120,7 +100,7 @@ function NavLink({
           {item.stage && (
             <span
               className={cn(
-                "hidden rounded-full px-2 py-0.5 text-[10px] font-semibold xl:inline-block",
+                "hidden rounded-full px-2 py-0.5 text-[10px] font-medium xl:inline-block",
                 stageColor[item.stage],
               )}
             >
@@ -139,7 +119,7 @@ function Brand({ collapsed }: { collapsed: boolean }) {
       <div
         role="img"
         aria-label="Spark Clean Laundry"
-        className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl dark:bg-white"
+        className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl dark:bg-white"
       >
         <img
           src={logo}
@@ -165,19 +145,17 @@ function Brand({ collapsed }: { collapsed: boolean }) {
 
 function NavBody({
   collapsed,
-  groups,
   onNavigate,
 }: {
   collapsed: boolean;
-  groups: NavGroup[];
   onNavigate?: () => void;
 }) {
   return (
-    <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-4" aria-label="Primary">
-      {groups.map((group) => (
+    <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-3" aria-label="Primary">
+      {NAV_GROUPS.map((group) => (
         <div key={group.label}>
           {!collapsed ? (
-            <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
+            <p className="text-label px-3.5 pb-1.5 text-slate-400 dark:text-slate-500">
               {group.label}
             </p>
           ) : (
@@ -209,22 +187,18 @@ export function Sidebar({
   mobileOpen,
   onCloseMobile,
 }: SidebarProps) {
-  const { user } = useAuthStore();
-  const isManager = user?.role === "manager";
-  const groups = isManager ? MANAGER_GROUPS : ADMIN_GROUPS;
-
   return (
     <>
       {/* Desktop */}
       <motion.aside
         initial={false}
-        animate={{ width: collapsed ? 76 : 264 }}
+        animate={{ width: collapsed ? 80 : 264 }}
         transition={{ type: "spring", stiffness: 260, damping: 26 }}
-        className="sticky top-0 hidden h-screen flex-col border-r border-slate-200 bg-white dark:border-border-dark dark:bg-sidebar md:flex"
+        className="sticky top-3 my-3 ml-3 hidden h-[calc(100vh-1.5rem)] flex-col overflow-hidden rounded-[2rem] bg-white shadow-[var(--shadow-card)] ring-1 ring-slate-200/60 md:flex dark:bg-card-dark dark:ring-border-dark/70"
       >
         <div
           className={cn(
-            "flex items-center border-b border-slate-200 p-4 dark:border-border-dark",
+            "flex items-center px-4 pt-4 pb-2",
             collapsed ? "justify-center" : "justify-between gap-2",
           )}
         >
@@ -232,44 +206,28 @@ export function Sidebar({
           {!collapsed && (
             <button
               onClick={onToggleCollapsed}
-              className="focus-ring rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+              className="focus-ring rounded-full p-1.5 text-slate-400 hover:bg-surface-muted hover:text-slate-700 dark:hover:bg-elevated-dark"
               aria-label="Collapse sidebar"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
           )}
         </div>
-        <NavBody collapsed={collapsed} groups={groups} />
-        <div className="border-t border-slate-200 p-3 dark:border-border-dark">
+        <NavBody collapsed={collapsed} />
+        <div className="mx-3 border-t border-slate-100 p-2 dark:border-slate-800/70">
           {collapsed ? (
             <button
               onClick={onToggleCollapsed}
-              className="focus-ring mx-auto flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+              className="focus-ring mx-auto flex h-9 w-9 items-center justify-center rounded-full text-slate-400 hover:bg-surface-muted hover:text-slate-700 dark:hover:bg-elevated-dark"
               aria-label="Expand sidebar"
             >
               <ChevronLeft className="h-4 w-4 rotate-180" />
             </button>
-          ) : isManager ? (
-            <div className="rounded-xl border border-primary/10 bg-primary/[0.06] p-3 dark:border-aqua/20 dark:bg-aqua/10">
-              <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-aqua/15 dark:text-aqua">
-                  <Store className="h-3.5 w-3.5" aria-hidden />
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-100">
-                    {user?.branchName ?? "Assigned branch"}
-                  </p>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                    {user?.branchId ?? "—"} · branch-scoped access
-                  </p>
-                </div>
-              </div>
-            </div>
           ) : (
-            <div className="rounded-xl bg-slate-50 p-3 dark:bg-elevated-dark/60">
+            <div className="rounded-2xl bg-surface-muted/70 p-3 dark:bg-elevated-dark/60">
               <p className="text-center text-[11px] text-slate-500 dark:text-slate-400">
                 Press{" "}
-                <kbd className="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[10px] dark:border-slate-600 dark:bg-slate-700">
+                <kbd className="rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] dark:border-slate-600 dark:bg-slate-700">
                   ⌘K
                 </kbd>{" "}
                 to search
@@ -292,26 +250,26 @@ export function Sidebar({
               aria-hidden
             />
             <motion.aside
-              initial={{ x: "-100%" }}
+              initial={{ x: "-110%" }}
               animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
+              exit={{ x: "-110%" }}
               transition={{ type: "spring", stiffness: 320, damping: 32 }}
-              className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col border-r border-slate-200 bg-white dark:border-border-dark dark:bg-sidebar md:hidden"
+              className="fixed inset-y-3 left-3 z-50 flex w-[280px] flex-col overflow-hidden rounded-[2rem] bg-white shadow-[var(--shadow-float)] ring-1 ring-slate-200/60 md:hidden dark:bg-card-dark dark:ring-border-dark/70"
               role="dialog"
               aria-modal="true"
               aria-label="Navigation"
             >
-              <div className="flex items-center justify-between border-b border-slate-200 p-4 dark:border-border-dark">
+              <div className="flex items-center justify-between px-5 pt-4 pb-2">
                 <Brand collapsed={false} />
                 <button
                   onClick={onCloseMobile}
-                  className="focus-ring rounded-lg p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  className="focus-ring rounded-full p-2 text-slate-400 hover:bg-surface-muted dark:hover:bg-elevated-dark"
                   aria-label="Close navigation"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <NavBody collapsed={false} groups={groups} onNavigate={onCloseMobile} />
+              <NavBody collapsed={false} onNavigate={onCloseMobile} />
             </motion.aside>
           </>
         )}

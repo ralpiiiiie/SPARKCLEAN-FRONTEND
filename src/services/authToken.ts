@@ -1,11 +1,11 @@
 /**
- * Session-scoped admin token used only by the AI assistant panel.
+ * Session-scoped bearer token for the Spark Clean API.
  *
  * The token lives in sessionStorage: it disappears when the tab closes and is
  * never written into the persisted Zustand store or any global app state.
  */
 
-const STORAGE_KEY = "spark-clean-ai-token";
+const STORAGE_KEY = "spark-clean-token";
 
 type Listener = () => void;
 const listeners = new Set<Listener>();

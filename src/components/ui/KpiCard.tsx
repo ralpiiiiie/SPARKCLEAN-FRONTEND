@@ -34,7 +34,7 @@ function TrendPill({ change, trend }: { change: number; trend: string }) {
   return (
     <div
       className={cn(
-        "flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold",
+        "flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium",
         styles,
       )}
     >
@@ -70,7 +70,7 @@ export function KpiCard({
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       whileHover={reduced ? undefined : { y: -4, transition: { type: "spring", stiffness: 300, damping: 22 } }}
       className={cn(
-        "card-hover-subtle relative overflow-hidden rounded-[var(--radius-card)] border border-slate-200/80 bg-white p-6 shadow-[var(--shadow-card)] dark:border-border-dark dark:bg-card-dark",
+        "card-hover-subtle relative overflow-hidden rounded-[var(--radius-card)] bg-white p-5 shadow-[var(--shadow-card)] ring-1 ring-slate-200/60 sm:p-6 dark:bg-card-dark dark:ring-border-dark/70",
         className,
       )}
     >
@@ -83,7 +83,7 @@ export function KpiCard({
       <div className="relative z-10">
         <div className="mb-4 flex items-start justify-between">
           <div
-            className="flex h-11 w-11 items-center justify-center rounded-xl"
+            className="flex h-11 w-11 items-center justify-center rounded-2xl"
             style={{ backgroundColor: `${sparklineColor}1a`, color: sparklineColor }}
           >
             <Icon className="h-5 w-5" aria-hidden />
@@ -93,10 +93,10 @@ export function KpiCard({
           )}
         </div>
 
-        <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">
+        <h3 className="text-[11px] font-medium tracking-[0.1em] text-slate-500 uppercase dark:text-slate-400">
           {title}
         </h3>
-        <p className="mt-1 font-display text-[1.75rem] leading-tight font-bold text-slate-900 tabular-nums dark:text-white">
+        <p className="mt-1.5 font-display text-[1.85rem] leading-tight font-medium tracking-tight text-slate-900 tabular-nums dark:text-white">
           {typeof value === "number" ? (
             <AnimatedNumber value={value} format={format} />
           ) : (

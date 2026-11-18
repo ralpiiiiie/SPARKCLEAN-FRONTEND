@@ -14,15 +14,16 @@ import {
   TrendingUp,
   Boxes,
   Database,
-  Store,
+  BookOpen,
+  LayoutDashboard,
+  ChevronDown,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAppStore } from "../../store";
 import { useAuthStore } from "../../store/auth";
 import { ROLE_LABELS } from "../../types/auth";
-import { apiService } from "../../services/api";
-import { useApiResource } from "../../hooks/useApiResource";
 import { EASE_OUT } from "./motion";
+import { IconButton } from "./Bento";
 
 interface Command {
   label: string;
@@ -31,19 +32,32 @@ interface Command {
   group: string;
 }
 
-const ADMIN_COMMANDS: Command[] = [
-  { label: "Dashboard", href: "/", icon: Search, group: "Navigate" },
-  { label: "Case Study", href: "/case-study", icon: Search, group: "Navigate" },
+const COMMANDS: Command[] = [
+  { label: "Dashboard", href: "/", icon: LayoutDashboard, group: "Navigate" },
+  { label: "Case Study", href: "/case-study", icon: BookOpen, group: "Navigate" },
   { label: "Descriptive Analytics", href: "/descriptive", icon: BarChart3, group: "Analytics" },
   { label: "Predictive Analytics", href: "/predictive", icon: TrendingUp, group: "Analytics" },
   { label: "Prescriptive Analytics", href: "/prescriptive", icon: Boxes, group: "Analytics" },
-  { label: "BA Process Summary", href: "/process", icon: Search, group: "Navigate" },
   { label: "Data Explorer", href: "/data", icon: Database, group: "Workspace" },
   { label: "Settings", href: "/settings", icon: SettingsIcon, group: "Workspace" },
 ];
 
-const MANAGER_COMMANDS: Command[] = [
-  { label: "Branch Dashboard", href: "/", icon: Store, group: "Branch workspace" },
+const ALERTS = [
+  {
+    t: "Four laundry services",
+    d: "Wash & Fold, Dry Cleaning, Comforters and Self-Service drive every chart.",
+    tone: "text-success",
+  },
+  {
+    t: "Machine-hour constraint",
+    d: "Between 200 and 600 hours. Prescriptive re-optimizes as soon as it changes.",
+    tone: "text-primary",
+  },
+  {
+    t: "Simulated academic dataset",
+    d: "60 customers, 192 orders and payments, 60 machine days, 50 campaigns.",
+    tone: "text-warning-hover",
+  },
 ];
 
 function initialsOf(name: string): string {
@@ -57,15 +71,8 @@ function initialsOf(name: string): string {
 
 export function TopBar({ onMenu }: { onMenu: () => void }) {
   const navigate = useNavigate();
-  const { filters, setFilters, theme, setTheme } = useAppStore();
+  const { theme, toggleTheme } = useAppStore();
   const { user, signOut } = useAuthStore();
-  const isManager = user?.role === "manager";
-  const { data: branchList } = useApiResource(
-    () => (isManager ? Promise.resolve([]) : apiService.getBranches()),
-    [isManager],
-  );
-  const branches = branchList ?? [];
-  const commands = isManager ? MANAGER_COMMANDS : ADMIN_COMMANDS;
   const [commandOpen, setCommandOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
@@ -75,8 +82,8 @@ export function TopBar({ onMenu }: { onMenu: () => void }) {
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return q ? commands.filter((c) => c.label.toLowerCase().includes(q)) : commands;
-  }, [query, commands]);
+    return q ? COMMANDS.filter((c) => c.label.toLowerCase().includes(q)) : COMMANDS;
+  }, [query]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -107,150 +114,41 @@ export function TopBar({ onMenu }: { onMenu: () => void }) {
 
   return (
     <>
-      <header className="glass-bar sticky top-0 z-30">
-        <div className="flex items-center gap-3 px-4 py-3 sm:px-6">
+      <header className="sticky top-0 z-30 px-3 pt-3 sm:px-5 sm:pt-4">
+        <div className="flex items-center gap-2 rounded-[1.5rem] bg-white/80 py-2 pr-2 pl-2 shadow-[var(--shadow-card)] ring-1 ring-slate-200/60 backdrop-blur-xl sm:gap-3 sm:pl-3 dark:bg-card-dark/85 dark:ring-border-dark/70">
           <button
             onClick={onMenu}
-            className="focus-ring -ml-1 rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 md:hidden"
+            className="focus-ring -ml-0.5 rounded-full p-2 text-slate-500 hover:bg-slate-100 md:hidden dark:hover:bg-slate-800"
             aria-label="Open navigation menu"
           >
             <Menu className="h-5 w-5" />
           </button>
 
-          <div className="min-w-0 flex-1">
-            <h2 className="truncate font-display text-base font-semibold text-slate-900 dark:text-white sm:text-lg">
-              {isManager
-                ? `${user?.branchName ?? "Branch"} Branch Dashboard`
-                : "Laundry Business Analytics"}
-            </h2>
-            <p className="hidden truncate text-xs text-slate-500 dark:text-slate-400 sm:block">
-              {isManager
-                ? `${user?.branchId ?? "—"} · ${user?.branchCity ?? "Metro Cebu"} · branch-scoped records only`
-                : `Metro Cebu · ${branches.length} branches · Descriptive → Predictive → Prescriptive`}
-            </p>
-          </div>
-
-          {/* Branch scope: managers get a fixed badge, never a selector. */}
-          {isManager ? (
-            <div className="hidden items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/[0.06] px-3 py-2 text-xs font-semibold text-primary lg:flex dark:border-aqua/25 dark:bg-aqua/10 dark:text-aqua">
-              <Store className="h-3.5 w-3.5" aria-hidden />
-              {user?.branchName ?? "Assigned branch"}
-            </div>
-          ) : (
-            <div className="hidden items-center gap-2 lg:flex">
-              <select
-                value={filters.branch}
-                onChange={(e) => setFilters({ branch: e.target.value })}
-                aria-label="Filter by branch"
-                className="focus-ring h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-              >
-                <option value="all">All branches</option>
-                {branches.map((b) => (
-                  <option key={b.id} value={b.name}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          <button
-            onClick={() => setCommandOpen(true)}
-            className="focus-ring hidden h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800 sm:flex"
-          >
-            <Search className="h-4 w-4" />
-            <span className="hidden lg:inline">Search…</span>
-            <kbd className="hidden rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-mono text-[10px] lg:inline dark:border-slate-700 dark:bg-slate-800">
-              ⌘K
-            </kbd>
-          </button>
-
-          {/* Notifications (global accounts only) */}
-          <div className={isManager ? "hidden" : "relative"}>
-            <button
-              onClick={() => setNotificationsOpen((v) => !v)}
-              className="focus-ring relative rounded-lg border border-slate-200 p-2 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
-              aria-label="Notifications"
-              aria-expanded={notificationsOpen}
-            >
-              <Bell className="h-5 w-5 text-slate-500" />
-              <span className="status-dot absolute top-1.5 right-1.5 bg-coral ring-2 ring-white dark:ring-slate-900" />
-            </button>
-            <AnimatePresence>
-              {notificationsOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setNotificationsOpen(false)}
-                    aria-hidden
-                  />
-                  <motion.div
-                    initial={{ opacity: 0, y: -8, scale: 0.97 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -8, scale: 0.97 }}
-                    transition={{ duration: 0.18, ease: EASE_OUT }}
-                    className="glass-panel absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-xl shadow-[var(--shadow-float)]"
-                  >
-                    <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
-                      <p className="font-display text-sm font-semibold">Alerts</p>
-                    </div>
-                    <ul className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {[
-                        { t: "Capacity headroom", d: "2 plants cover forecast demand.", tone: "text-success" },
-                        { t: "Model refreshed", d: "Best-fit curves re-validated on months 25–27.", tone: "text-primary" },
-                        { t: "Talisay trending down", d: "Demand declining vs prior months.", tone: "text-warning-hover" },
-                      ].map((n) => (
-                        <li key={n.t} className="flex gap-3 px-4 py-3">
-                          <span className={`mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-current ${n.tone}`} />
-                          <div>
-                            <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{n.t}</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">{n.d}</p>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Theme */}
-          <button
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            className="focus-ring rounded-lg border border-slate-200 p-2 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800"
-            aria-label={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
-          >
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.span
-                key={theme}
-                initial={{ opacity: 0, rotate: -60, scale: 0.8 }}
-                animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                exit={{ opacity: 0, rotate: 60, scale: 0.8 }}
-                transition={{ duration: 0.18, ease: EASE_OUT }}
-                className="block"
-              >
-                {theme === "light" ? (
-                  <Moon className="h-5 w-5 text-slate-500" />
-                ) : (
-                  <Sun className="h-5 w-5 text-slate-500" />
-                )}
-              </motion.span>
-            </AnimatePresence>
-          </button>
-
-          {/* User */}
-          <div className="relative">
+          {/* Greeting + account menu */}
+          <div className="relative min-w-0">
             <button
               onClick={() => setUserMenuOpen((v) => !v)}
-              className="focus-ring flex items-center gap-2 rounded-lg p-1 hover:bg-slate-50 dark:hover:bg-slate-800"
+              className="focus-ring flex items-center gap-2.5 rounded-full p-1 pr-1.5 text-left hover:bg-slate-100/70 sm:pr-2 dark:hover:bg-slate-800/60"
               aria-label="Account menu"
               aria-expanded={userMenuOpen}
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-teal text-xs font-bold text-white">
+              <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-teal text-xs font-medium text-white shadow-sm">
                 {initialsOf(user?.username ?? "")}
               </span>
+              <span className="hidden min-w-0 sm:block">
+                <span className="block text-[10px] font-medium tracking-wide text-slate-400 dark:text-slate-500">
+                  Hello,
+                </span>
+                <span className="block max-w-[10rem] truncate text-sm font-medium text-slate-900 dark:text-white">
+                  {user?.username ?? "Account"}
+                </span>
+              </span>
+              <ChevronDown
+                className="hidden h-3.5 w-3.5 flex-shrink-0 text-slate-400 sm:block"
+                aria-hidden
+              />
             </button>
+
             <AnimatePresence>
               {userMenuOpen && (
                 <>
@@ -264,9 +162,9 @@ export function TopBar({ onMenu }: { onMenu: () => void }) {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.98 }}
                     transition={{ duration: 0.18, ease: EASE_OUT }}
-                    className="glass-panel absolute right-0 z-50 mt-2 w-64 overflow-hidden rounded-xl py-1 shadow-[var(--shadow-float)]"
+                    className="glass-panel absolute left-0 z-50 mt-2 w-64 overflow-hidden rounded-3xl py-1 shadow-[var(--shadow-float)]"
                   >
-                    <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+                    <div className="px-4 py-3">
                       <p className="truncate text-sm font-medium text-slate-900 dark:text-white">
                         {user?.username ?? "Account"}
                       </p>
@@ -274,35 +172,28 @@ export function TopBar({ onMenu }: { onMenu: () => void }) {
                         {user?.email ?? ""}
                       </p>
                       {user && (
-                        <span className="mt-1.5 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary dark:bg-aqua/15 dark:text-aqua">
+                        <span className="mt-2 inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-medium text-primary dark:bg-aqua/15 dark:text-aqua">
                           {ROLE_LABELS[user.role]}
                         </span>
                       )}
-                      {isManager && user?.branchName && (
-                        <p className="mt-1 flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
-                          <Store className="h-3 w-3" aria-hidden />
-                          {user.branchName} · {user.branchId}
-                        </p>
-                      )}
                     </div>
-                    {!isManager && (
-                      <button
-                        onClick={() => {
-                          setUserMenuOpen(false);
-                          navigate("/settings");
-                        }}
-                        className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
-                      >
-                        <SettingsIcon className="h-4 w-4" />
-                        Settings
-                      </button>
-                    )}
+                    <div className="mx-3 border-t border-slate-100 dark:border-slate-800" />
+                    <button
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        navigate("/settings");
+                      }}
+                      className="focus-ring mt-1 flex w-full items-center gap-2.5 rounded-2xl px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-surface-muted dark:text-slate-300 dark:hover:bg-elevated-dark"
+                    >
+                      <SettingsIcon className="h-4 w-4" />
+                      Settings
+                    </button>
                     <button
                       onClick={() => {
                         setUserMenuOpen(false);
                         void signOut();
                       }}
-                      className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-coral hover:bg-slate-50 dark:hover:bg-slate-800"
+                      className="focus-ring flex w-full items-center gap-2.5 rounded-2xl px-4 py-2.5 text-left text-sm text-coral hover:bg-surface-muted dark:hover:bg-elevated-dark"
                     >
                       <LogOut className="h-4 w-4" />
                       Sign out
@@ -311,6 +202,108 @@ export function TopBar({ onMenu }: { onMenu: () => void }) {
                 </>
               )}
             </AnimatePresence>
+          </div>
+
+          <div className="ml-auto flex min-w-0 items-center gap-2">
+            <button
+              onClick={() => setCommandOpen(true)}
+              className="focus-ring hidden h-10 items-center gap-2 rounded-full bg-surface-muted/80 px-3.5 text-sm text-slate-500 transition-colors hover:bg-slate-100 sm:flex dark:bg-elevated-dark/80 dark:text-slate-400 dark:hover:bg-elevated-dark"
+              aria-label="Search pages"
+            >
+              <Search className="h-4 w-4" />
+              <span className="hidden xl:inline">Search…</span>
+              <kbd className="hidden rounded-full bg-white px-1.5 py-0.5 text-[10px] text-slate-400 ring-1 ring-slate-200/70 xl:inline dark:bg-card-dark dark:ring-border-dark">
+                ⌘K
+              </kbd>
+            </button>
+            <button
+              onClick={() => setCommandOpen(true)}
+              className="focus-ring flex h-10 w-10 items-center justify-center rounded-full bg-surface-muted/80 text-slate-500 sm:hidden dark:bg-elevated-dark/80 dark:text-slate-400"
+              aria-label="Search pages"
+            >
+              <Search className="h-[18px] w-[18px]" />
+            </button>
+
+            {/* Notifications */}
+            <div className="relative">
+              <IconButton
+                icon={Bell}
+                label="Notifications"
+                variant="soft"
+                aria-expanded={notificationsOpen}
+                onClick={() => setNotificationsOpen((v) => !v)}
+              />
+              <span
+                className="pointer-events-none absolute top-2 right-2.5 status-dot bg-coral ring-2 ring-white dark:ring-card-dark"
+                aria-hidden
+              />
+              <AnimatePresence>
+                {notificationsOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setNotificationsOpen(false)}
+                      aria-hidden
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                      transition={{ duration: 0.18, ease: EASE_OUT }}
+                      className="glass-panel absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-3xl shadow-[var(--shadow-float)]"
+                    >
+                      <div className="px-4 pt-4 pb-2">
+                        <p className="text-heading text-sm">Alerts</p>
+                      </div>
+                      <ul className="px-2 pb-2">
+                        {ALERTS.map((n) => (
+                          <li
+                            key={n.t}
+                            className="flex gap-3 rounded-2xl px-3 py-2.5 hover:bg-surface-muted/70 dark:hover:bg-elevated-dark/60"
+                          >
+                            <span
+                              className={`mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-current ${n.tone}`}
+                            />
+                            <div>
+                              <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                                {n.t}
+                              </p>
+                              <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                                {n.d}
+                              </p>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Theme */}
+            <button
+              onClick={toggleTheme}
+              className="focus-ring flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-500 ring-1 ring-slate-200/80 transition-colors hover:bg-surface-hover dark:bg-elevated-dark dark:text-slate-300 dark:ring-border-dark/70 dark:hover:bg-slate-800"
+              aria-label={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={theme}
+                  initial={{ opacity: 0, rotate: -60, scale: 0.8 }}
+                  animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                  exit={{ opacity: 0, rotate: 60, scale: 0.8 }}
+                  transition={{ duration: 0.18, ease: EASE_OUT }}
+                  className="block"
+                >
+                  {theme === "light" ? (
+                    <Moon className="h-[18px] w-[18px]" />
+                  ) : (
+                    <Sun className="h-[18px] w-[18px]" />
+                  )}
+                </motion.span>
+              </AnimatePresence>
+            </button>
           </div>
         </div>
       </header>
@@ -335,9 +328,9 @@ export function TopBar({ onMenu }: { onMenu: () => void }) {
               exit={{ scale: 0.96, opacity: 0, y: -8 }}
               transition={{ duration: 0.2, ease: EASE_OUT }}
               onClick={(e) => e.stopPropagation()}
-              className="glass-panel mx-4 w-full max-w-lg overflow-hidden rounded-2xl shadow-[var(--shadow-float)]"
+              className="glass-panel mx-4 w-full max-w-lg overflow-hidden rounded-[1.75rem] shadow-[var(--shadow-float)]"
             >
-              <div className="flex items-center gap-3 border-b border-slate-200 px-4 dark:border-slate-800">
+              <div className="flex items-center gap-3 px-5">
                 <Search className="h-5 w-5 flex-shrink-0 text-slate-400" />
                 <input
                   ref={inputRef}
@@ -358,9 +351,9 @@ export function TopBar({ onMenu }: { onMenu: () => void }) {
                     }
                   }}
                   placeholder="Search pages and analytics…"
-                  className="h-12 flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
+                  className="h-14 flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
                 />
-                <kbd className="rounded border border-slate-200 px-1.5 py-0.5 font-mono text-[10px] text-slate-400 dark:border-slate-700">
+                <kbd className="rounded-full bg-surface-muted px-2 py-1 text-[10px] text-slate-400 dark:bg-elevated-dark">
                   ESC
                 </kbd>
               </div>
@@ -395,7 +388,7 @@ export function TopBar({ onMenu }: { onMenu: () => void }) {
 
 function cnRow(isActive: boolean): string {
   return [
-    "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+    "flex w-full items-center gap-3 rounded-full px-3.5 py-2.5 text-sm transition-colors",
     isActive
       ? "bg-primary/10 text-primary dark:bg-primary/15 dark:text-primary-light"
       : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800",

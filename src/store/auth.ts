@@ -26,8 +26,8 @@ let epoch = 0;
 
 /**
  * Authentication state is intentionally not persisted: the bearer token lives
- * in sessionStorage and the server remains the source of truth for the role and
- * branch on every request.
+ * in sessionStorage and the server remains the source of truth for the role on
+ * every request.
  */
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,

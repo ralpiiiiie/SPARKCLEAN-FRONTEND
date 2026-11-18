@@ -12,7 +12,7 @@ import {
   Mail,
   ShieldCheck,
   Sparkles,
-  Store,
+  Clock,
 } from "lucide-react";
 import logo from "../assets/logo.png";
 import { Button } from "../components/ui/Button";
@@ -27,18 +27,18 @@ const YEAR = new Date().getFullYear();
 const HIGHLIGHTS = [
   {
     icon: BarChart3,
-    title: "One live source of truth",
-    body: "Orders, revenue, services and customers computed from recorded Spark Clean data.",
+    title: "Service mix, not guesswork",
+    body: "Descriptive performance, next-month demand and a profit-maximizing production plan.",
   },
   {
-    icon: Store,
-    title: "Branch-level focus",
-    body: "Branch managers see only their own branch, with the same trusted analytics.",
+    icon: Clock,
+    title: "Constrained by machine hours",
+    body: "Set 200 to 600 available hours and watch the recommended schedule re-optimize live.",
   },
   {
     icon: ShieldCheck,
     title: "Private by design",
-    body: "Accounts, conversations and records are isolated on the server, not just in the UI.",
+    body: "Accounts and records are protected on the server, not hidden by the interface alone.",
   },
 ];
 
@@ -92,7 +92,7 @@ export function Login() {
 
   return (
     <div className={theme === "dark" ? "dark" : ""}>
-      <div className="relative min-h-screen overflow-hidden bg-canvas text-slate-900 dark:bg-canvas-dark dark:text-slate-100">
+      <div className="app-canvas relative min-h-screen overflow-hidden text-slate-900 dark:text-slate-100">
         {/* Ambient brand glow */}
         <div
           aria-hidden
@@ -103,9 +103,9 @@ export function Login() {
           className="pointer-events-none absolute -right-40 bottom-[-10rem] h-[34rem] w-[34rem] rounded-full bg-aqua/20 blur-[140px] dark:bg-aqua/15"
         />
 
-        <div className="relative mx-auto grid min-h-screen w-full max-w-6xl items-stretch lg:grid-cols-[1.05fr_1fr]">
+        <div className="relative mx-auto grid min-h-screen w-full max-w-[86rem] items-stretch lg:grid-cols-[1.05fr_1fr] lg:gap-5 lg:p-5">
           {/* Brand panel */}
-          <section className="relative hidden flex-col justify-between overflow-hidden bg-brand-gradient p-10 text-white lg:flex xl:p-14">
+          <section className="relative hidden flex-col justify-between overflow-hidden bg-brand-gradient p-10 text-white lg:flex lg:rounded-[2.25rem] xl:p-14">
             <div aria-hidden className="pointer-events-none absolute inset-0 opacity-25">
               <div className="absolute -top-24 right-0 h-80 w-80 rounded-full border border-white/30" />
               <div className="absolute top-10 -right-16 h-96 w-96 rounded-full border border-white/20" />
@@ -113,7 +113,7 @@ export function Login() {
             </div>
 
             <div className="relative">
-              <div className="inline-flex items-center rounded-2xl bg-white px-4 py-2.5 shadow-lg">
+              <div className="inline-flex items-center rounded-3xl bg-white px-4 py-2.5 shadow-lg">
                 <img
                   src={logo}
                   alt="Spark Clean Laundry"
@@ -122,25 +122,24 @@ export function Login() {
                 />
               </div>
 
-              <h1 className="mt-10 max-w-md font-display text-4xl leading-tight font-bold xl:text-[2.75rem]">
+              <h1 className="mt-10 max-w-md font-display text-4xl leading-tight font-medium xl:text-[2.75rem]">
                 Laundry operations,
                 <br />
                 clearly in view.
               </h1>
               <p className="mt-4 max-w-md text-[15px] leading-relaxed text-white/80">
-                Sign in once. The Spark Clean workspace opens the dashboard your account is
-                trusted to see — the full business for the Main Admin, or a dedicated branch
-                view for branch managers.
+                Sign in once. Review sales and profit, forecast next month's demand, then see
+                how many kilos, pieces and loads to process within your machine-hour limit.
               </p>
 
               <ul className="mt-10 space-y-5">
                 {HIGHLIGHTS.map((item) => (
                   <li key={item.title} className="flex gap-3.5">
-                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
+                    <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25">
                       <item.icon className="h-4 w-4" aria-hidden />
                     </span>
                     <div>
-                      <p className="text-sm font-semibold">{item.title}</p>
+                      <p className="text-sm font-medium">{item.title}</p>
                       <p className="mt-0.5 max-w-sm text-[12.5px] leading-relaxed text-white/70">
                         {item.body}
                       </p>
@@ -151,7 +150,7 @@ export function Login() {
             </div>
 
             <p className="relative mt-10 text-[11px] text-white/55">
-              Spark Clean Laundry · Metro Cebu, Philippines
+              SparkClean Laundry · Barangay Gabi, Cordova, Cebu
             </p>
           </section>
 
@@ -172,33 +171,32 @@ export function Login() {
                 />
               </div>
 
-              <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[var(--shadow-float)] sm:p-8 dark:border-border-dark dark:bg-card-dark">
+              <div className="rounded-[2rem] bg-white p-6 shadow-[var(--shadow-float)] ring-1 ring-slate-200/60 sm:p-8 dark:bg-card-dark dark:ring-border-dark/70">
                 <div className="flex items-center gap-2 text-primary dark:text-aqua">
                   <Sparkles className="h-4 w-4" aria-hidden />
-                  <span className="text-[11px] font-semibold tracking-[0.16em] uppercase">
+                  <span className="text-[11px] font-medium tracking-[0.16em] uppercase">
                     Secure workspace
                   </span>
                 </div>
 
-                <h2 className="mt-3 font-display text-2xl font-bold text-slate-900 dark:text-white">
+                <h2 className="mt-3 font-display text-[1.7rem] font-medium tracking-[-0.01em] text-slate-900 dark:text-white">
                   Sign in to Spark Clean
                 </h2>
                 <p className="mt-1.5 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                  Use the account issued to you. Your role and branch are verified on the
-                  server.
+                  Use the account issued to you. Your role is verified on the server.
                 </p>
 
                 <form onSubmit={onSubmit} className="mt-6 space-y-4" noValidate>
                   <div>
                     <label
                       htmlFor="login-email"
-                      className="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300"
+                      className="mb-1.5 block pl-1 text-[11px] font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400"
                     >
                       Email address
                     </label>
                     <div className="relative">
                       <Mail
-                        className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400"
+                        className="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-slate-400"
                         aria-hidden
                       />
                       <input
@@ -215,7 +213,7 @@ export function Login() {
                         placeholder="you@sparkclean.com"
                         aria-invalid={Boolean(fieldError)}
                         disabled={busy}
-                        className="focus-ring h-11 w-full rounded-xl border border-slate-200 bg-white pr-3 pl-10 text-sm text-slate-900 transition-colors placeholder:text-slate-400 hover:border-slate-300 disabled:opacity-60 dark:border-border-dark dark:bg-elevated-dark dark:text-white dark:placeholder:text-slate-500 dark:hover:border-slate-600"
+                        className="focus-ring h-11 w-full rounded-full border border-transparent bg-surface-muted/80 pr-4 pl-11 text-sm text-slate-900 transition-colors placeholder:text-slate-400 hover:bg-slate-100/80 focus:bg-white disabled:opacity-60 dark:bg-elevated-dark/80 dark:text-white dark:placeholder:text-slate-500 dark:hover:bg-elevated-dark dark:focus:bg-card-dark"
                       />
                     </div>
                   </div>
@@ -223,13 +221,13 @@ export function Login() {
                   <div>
                     <label
                       htmlFor="login-password"
-                      className="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300"
+                      className="mb-1.5 block pl-1 text-[11px] font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400"
                     >
                       Password
                     </label>
                     <div className="relative">
                       <LockKeyhole
-                        className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400"
+                        className="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-slate-400"
                         aria-hidden
                       />
                       <input
@@ -243,7 +241,7 @@ export function Login() {
                         }}
                         placeholder="Enter your password"
                         disabled={busy}
-                        className="focus-ring h-11 w-full rounded-xl border border-slate-200 bg-white pr-11 pl-10 text-sm text-slate-900 transition-colors placeholder:text-slate-400 hover:border-slate-300 disabled:opacity-60 dark:border-border-dark dark:bg-elevated-dark dark:text-white dark:placeholder:text-slate-500 dark:hover:border-slate-600"
+                        className="focus-ring h-11 w-full rounded-full border border-transparent bg-surface-muted/80 pr-12 pl-11 text-sm text-slate-900 transition-colors placeholder:text-slate-400 hover:bg-slate-100/80 focus:bg-white disabled:opacity-60 dark:bg-elevated-dark/80 dark:text-white dark:placeholder:text-slate-500 dark:hover:bg-elevated-dark dark:focus:bg-card-dark"
                       />
                       <button
                         type="button"
@@ -251,7 +249,7 @@ export function Login() {
                         aria-label={showPassword ? "Hide password" : "Show password"}
                         aria-pressed={showPassword}
                         tabIndex={0}
-                        className="focus-ring absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-xl text-slate-400 hover:text-primary dark:hover:text-aqua"
+                        className="focus-ring absolute inset-y-1 right-1 flex w-9 items-center justify-center rounded-full text-slate-400 hover:bg-white hover:text-primary dark:hover:bg-elevated-dark dark:hover:text-aqua"
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4" aria-hidden />
@@ -265,7 +263,7 @@ export function Login() {
                   {(fieldError || submitError) && (
                     <p
                       role="alert"
-                      className="flex items-start gap-2 rounded-xl border border-coral/20 bg-coral/10 px-3 py-2.5 text-[12px] leading-snug text-coral-hover dark:text-coral-light"
+                      className="flex items-start gap-2 rounded-2xl bg-coral/10 px-3.5 py-2.5 text-[12px] leading-snug text-coral-hover dark:text-coral-light"
                     >
                       <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
                       <span>{fieldError ?? submitError}</span>
@@ -293,11 +291,11 @@ export function Login() {
                   </Button>
                 </form>
 
-                <div className="mt-6 flex items-start gap-2.5 rounded-xl bg-slate-50 px-3.5 py-3 text-[11.5px] leading-snug text-slate-500 dark:bg-white/[0.04] dark:text-slate-400">
+                <div className="mt-6 flex items-start gap-2.5 rounded-2xl bg-surface-muted/70 px-4 py-3.5 text-[11.5px] leading-snug text-slate-500 dark:bg-white/[0.04] dark:text-slate-400">
                   <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-teal" aria-hidden />
                   <span>
-                    Main Admin opens the full business dashboard. Managers are routed to their
-                    assigned branch automatically — there is no branch selector to change.
+                    Seeded demo account: admin@sparkclean.com · SparkClean2024!. The same
+                    account is created by the backend seed.
                   </span>
                 </div>
               </div>

@@ -67,17 +67,19 @@
   --color-text-inverse: #ffffff;
 
   /* ── Typography ── */
-  --font-display: "Poppins", ui-sans-serif, system-ui, sans-serif;
-  --font-body: "Poppins", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  /* Inter only, weights 300 / 400 / 500. */
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Inter", ui-sans-serif, system-ui, sans-serif;
 
   /* ── Elevation ── */
-  --shadow-card: 0 1px 2px rgba(18, 59, 112, 0.04), 0 8px 24px -12px rgba(18, 59, 112, 0.12);
-  --shadow-card-hover: 0 2px 4px rgba(18, 59, 112, 0.05), 0 18px 40px -16px rgba(18, 59, 112, 0.22);
-  --shadow-float: 0 24px 60px -20px rgba(18, 59, 112, 0.35);
+  /* Soft, diffuse bento elevation. Shadow colour reuses the existing navy. */
+  --shadow-card: 0 1px 2px rgba(18, 59, 112, 0.03), 0 18px 44px -26px rgba(18, 59, 112, 0.2);
+  --shadow-card-hover: 0 2px 4px rgba(18, 59, 112, 0.04), 0 26px 54px -26px rgba(18, 59, 112, 0.28);
+  --shadow-float: 0 28px 70px -24px rgba(18, 59, 112, 0.38);
 
   /* ── Radii ── */
-  --radius-card: 1.25rem;
+  --radius-card: 1.75rem;
 }
 
 :root {
@@ -105,11 +107,17 @@
 
   body {
     @apply bg-canvas font-body text-slate-900 antialiased dark:bg-canvas-dark dark:text-slate-100;
+    font-weight: 400;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display font-semibold tracking-tight;
+    @apply font-display tracking-tight;
+    font-weight: 500;
     text-wrap: balance;
+  }
+
+  strong, b {
+    font-weight: 500;
   }
 
   /* Subtle, consistent scrollbars */
@@ -133,7 +141,7 @@
 
 @layer components {
   .surface-card {
-    @apply rounded-[var(--radius-card)] border border-slate-200/80 bg-white shadow-[var(--shadow-card)] dark:border-border-dark dark:bg-card-dark;
+    @apply rounded-[var(--radius-card)] bg-white shadow-[var(--shadow-card)] ring-1 ring-slate-200/60 dark:bg-card-dark dark:ring-border-dark/70;
   }
 
   .section-eyebrow {
@@ -146,15 +154,15 @@
   }
 
   .card-hover {
-    @apply transition duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[var(--shadow-card-hover)];
+    @apply transition duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-card-hover)];
   }
 
   .card-hover-subtle {
-    @apply transition duration-200 hover:border-primary/10 hover:shadow-[var(--shadow-card-hover)];
+    @apply transition duration-200 hover:shadow-[var(--shadow-card-hover)];
   }
 
   .table-cell {
-    @apply border-t border-slate-100 px-4 py-3 text-sm text-slate-700 dark:border-slate-800 dark:text-slate-300;
+    @apply border-t border-slate-100/80 px-4 py-3.5 text-sm text-slate-700 dark:border-slate-800/80 dark:text-slate-300;
   }
 
   .text-gradient {
@@ -163,6 +171,57 @@
 }
 
 @layer utilities {
+  /* ── Typography scale (Inter 300/400/500 only) ── */
+  .text-metric {
+    font-family: var(--font-display);
+    font-size: clamp(1.65rem, 1.35rem + 0.9vw, 2.1rem);
+    line-height: 1.08;
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .text-heading {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.018em;
+  }
+
+  .text-body {
+    font-weight: 400;
+    line-height: 1.65;
+  }
+
+  .text-label {
+    font-size: 0.6875rem;
+    line-height: 1.2;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .numeric {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /*
+   * Soft light-mode wash built only from existing brand tokens:
+   * canvas + primary-light + aqua-light + teal-light. Dark mode stays flat.
+   */
+  .app-canvas {
+    background-color: var(--color-canvas);
+    background-image:
+      radial-gradient(1100px 520px at 12% -8%, var(--color-primary-light) 0%, transparent 62%),
+      radial-gradient(900px 460px at 95% 4%, var(--color-aqua-light) 0%, transparent 58%),
+      radial-gradient(900px 620px at 70% 108%, var(--color-teal-light) 0%, transparent 60%);
+    background-attachment: fixed;
+  }
+
+  .dark .app-canvas {
+    background-color: var(--color-canvas-dark);
+    background-image: none;
+  }
+
   /* Brand gradients inspired by the logo */
   .bg-brand-gradient {
     background-image: linear-gradient(115deg, #07519b 0%, #168bd2 48%, #20b84b 100%);

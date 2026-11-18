@@ -5,7 +5,7 @@ import { Button } from "./Button";
 
 export function PanelError({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-coral/30 bg-coral/5 px-4 py-8 text-center">
+    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl bg-coral/5 px-4 py-8 text-center">
       <AlertCircle className="h-5 w-5 text-coral" />
       <p className="text-sm text-slate-600 dark:text-slate-300">{message}</p>
       {onRetry && (
@@ -40,7 +40,7 @@ export function EmptyPanel({
   return (
     <div
       className={cn(
-        "rounded-xl border border-dashed border-slate-200 px-4 py-10 text-center dark:border-slate-700",
+        "rounded-2xl bg-surface-muted/50 px-4 py-10 text-center dark:bg-elevated-dark/40",
         className,
       )}
     >

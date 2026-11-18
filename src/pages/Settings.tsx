@@ -1,59 +1,58 @@
 import { useEffect, useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { PageHeader } from '../components/ui/PageHeader';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
-import { Field, NumberInput, TextInput } from '../components/ui/Field';
-import { PanelError, PanelLoading } from '../components/ui/PanelState';
-import { useAppStore } from '../store';
-import { useApiResource } from '../hooks/useApiResource';
-import { apiService } from '../services/api';
-import { errorMessage } from '../services/http';
-import type { SettingsInput } from '../types/api';
-import { Moon, Sun, DollarSign, Package, RefreshCw, Save, Database } from 'lucide-react';
-import { toast } from 'sonner';
+import { Database, Moon, RefreshCw, Save, Sun } from "lucide-react";
+import { toast } from "sonner";
+import { PageHeader } from "../components/ui/PageHeader";
+import { Badge } from "../components/ui/Badge";
+import { Button } from "../components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/Card";
+import { Field, NumberInput, TextInput } from "../components/ui/Field";
+import { PanelError, PanelLoading } from "../components/ui/PanelState";
+import { useApiResource } from "../hooks/useApiResource";
+import { getSettings, updateSettings } from "../services/api";
+import { errorMessage } from "../services/http";
+import { useAppStore } from "../store";
+import type { Settings as SettingsPayload } from "../types";
 
-function draftFrom(settings: SettingsInput): SettingsInput {
+function draftFrom(settings: SettingsPayload): Pick<SettingsPayload, "currency" | "machineHoursDefault"> {
   return {
-    rushCostPerLoad: settings.rushCostPerLoad,
-    storageCostPerLoad: settings.storageCostPerLoad,
     currency: settings.currency,
-    units: settings.units,
-    validationMonths: settings.validationMonths,
+    machineHoursDefault: settings.machineHoursDefault,
   };
 }
 
 export function Settings() {
-  const { theme, setTheme, updateSettings } = useAppStore();
-  const { data, status, error, reload } = useApiResource(() => apiService.getSettings(), []);
-  const [draft, setDraft] = useState<SettingsInput | null>(null);
+  const { theme, toggleTheme } = useAppStore();
+  const { data, status, error, reload, setData } = useApiResource(getSettings, []);
+  const [draft, setDraft] = useState<ReturnType<typeof draftFrom> | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!data) return;
-    setDraft(draftFrom(data));
-    updateSettings({
-      rushCostPerLoad: data.rushCostPerLoad,
-      storageCostPerLoad: data.storageCostPerLoad,
-      currency: data.currency,
-      units: data.units,
-    });
-  }, [data, updateSettings]);
+    if (data) setDraft(draftFrom(data));
+  }, [data]);
 
   async function save() {
     if (!draft) return;
+    const hours = Number(draft.machineHoursDefault);
+    if (!Number.isFinite(hours) || hours < 200 || hours > 600) {
+      toast.error("Machine hours must be between 200 and 600.");
+      return;
+    }
+    if (!draft.currency.trim()) {
+      toast.error("Enter a currency symbol.");
+      return;
+    }
+
     setSaving(true);
     try {
-      const saved = await apiService.updateSettings(draft);
-      setDraft(draftFrom(saved));
-      updateSettings({
-        rushCostPerLoad: saved.rushCostPerLoad,
-        storageCostPerLoad: saved.storageCostPerLoad,
-        currency: saved.currency,
-        units: saved.units,
+      const saved = await updateSettings({
+        currency: draft.currency.trim().slice(0, 3),
+        machineHoursDefault: Math.round(hours),
       });
-      toast.success('Settings saved', { description: 'Analytics engines now use these values.' });
-      await reload();
+      setData(saved);
+      setDraft(draftFrom(saved));
+      toast.success("Settings saved", {
+        description: "The prescriptive planner now opens with this machine-hour limit.",
+      });
     } catch (cause) {
       toast.error(errorMessage(cause));
     } finally {
@@ -62,42 +61,41 @@ export function Settings() {
   }
 
   const dirty =
-    draft !== null &&
-    data !== null &&
-    JSON.stringify(draftFrom(data)) !== JSON.stringify(draft);
+    draft !== null && data !== null && JSON.stringify(draftFrom(data)) !== JSON.stringify(draft);
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="max-w-3xl space-y-4 sm:space-y-5">
       <PageHeader
         eyebrow="Workspace"
         title="Settings"
-        description="Configure appearance and the cost parameters used by the analytics engine."
+        description="Appearance and the default capacity used by the prescriptive planner."
         actions={
-          <Badge variant={status === 'ready' ? 'success' : 'secondary'} dot>
-            {status === 'ready' ? 'Server settings' : status === 'loading' ? 'Loading…' : 'Offline'}
+          <Badge variant={status === "ready" ? "success" : status === "error" ? "danger" : "secondary"} dot>
+            {status === "ready" ? "Server settings" : status === "loading" ? "Loading…" : "Unavailable"}
           </Badge>
         }
       />
 
       <Card>
         <CardHeader>
-          <CardTitle>Appearance</CardTitle>
+          <CardTitle subtitle="Stored on this device only.">Appearance</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/40">
+          <div className="flex items-center justify-between gap-4 rounded-2xl bg-surface-muted/60 p-4 ring-1 ring-slate-200/50 dark:bg-elevated-dark/50 dark:ring-border-dark/50">
             <div className="flex items-center gap-3">
-              {theme === 'light' ? <Sun className="w-5 h-5 text-warning" /> : <Moon className="w-5 h-5 text-purple" />}
+              {theme === "light" ? (
+                <Sun className="h-5 w-5 text-warning" aria-hidden />
+              ) : (
+                <Moon className="h-5 w-5 text-purple" aria-hidden />
+              )}
               <div>
                 <p className="font-medium text-slate-900 dark:text-white">Theme</p>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  {theme === 'light' ? 'Light mode' : 'Dark mode'}
+                  {theme === "light" ? "Light mode" : "Dark mode"}
                 </p>
               </div>
             </div>
-            <Button
-              variant="outline"
-              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-            >
+            <Button variant="outline" onClick={toggleTheme}>
               Toggle
             </Button>
           </div>
@@ -107,82 +105,47 @@ export function Settings() {
       <Card>
         <CardHeader
           action={
-            status === 'error' ? (
+            status === "error" ? (
               <Button variant="ghost" size="sm" onClick={() => void reload()}>
                 <RefreshCw className="h-3.5 w-3.5" /> Retry
               </Button>
             ) : undefined
           }
         >
-          <CardTitle subtitle="Rush and storage penalties feed the performance-improvement engine.">
-            Cost Parameters
+          <CardTitle subtitle="Shared by every analytics request and the Data Explorer.">
+            Analytics defaults
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {status === 'loading' && !draft && <PanelLoading label="Loading settings…" />}
-          {status === 'error' && (
-            <PanelError message={error ?? 'Could not load settings'} onRetry={reload} />
+          {status === "loading" && !draft && <PanelLoading label="Loading settings…" />}
+          {status === "error" && (
+            <PanelError message={error ?? "Could not load settings."} onRetry={reload} />
           )}
           {draft && (
             <>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Rush cost per load" htmlFor="rush-cost" hint="Penalty for loads received after cut-off.">
-                  <div className="relative">
-                    <DollarSign className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <NumberInput
-                      id="rush-cost"
-                      min={0}
-                      step="0.01"
-                      className="pl-9"
-                      value={draft.rushCostPerLoad}
-                      onChange={(e) =>
-                        setDraft({ ...draft, rushCostPerLoad: Number(e.target.value) })
-                      }
-                    />
-                  </div>
-                </Field>
-
-                <Field label="Storage cost per load" htmlFor="storage-cost" hint="Penalty for finished loads awaiting delivery.">
-                  <div className="relative">
-                    <Package className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <NumberInput
-                      id="storage-cost"
-                      min={0}
-                      step="0.01"
-                      className="pl-9"
-                      value={draft.storageCostPerLoad}
-                      onChange={(e) =>
-                        setDraft({ ...draft, storageCostPerLoad: Number(e.target.value) })
-                      }
-                    />
-                  </div>
-                </Field>
-
-                <Field label="Currency symbol" htmlFor="currency">
+                <Field label="Currency symbol" htmlFor="currency" hint="Used for display only.">
                   <TextInput
                     id="currency"
                     maxLength={3}
                     value={draft.currency}
-                    onChange={(e) => setDraft({ ...draft, currency: e.target.value })}
+                    onChange={(event) => setDraft({ ...draft, currency: event.target.value })}
                   />
                 </Field>
 
-                <Field label="Volume unit" htmlFor="units">
-                  <TextInput
-                    id="units"
-                    value={draft.units}
-                    onChange={(e) => setDraft({ ...draft, units: e.target.value })}
-                  />
-                </Field>
-
-                <Field label="Validation months" htmlFor="validation-months" hint="Held-out months used when scoring forecast models.">
+                <Field
+                  label="Default machine hours"
+                  htmlFor="machine-hours"
+                  hint="Between 200 and 600 hours. The prescriptive planner starts here."
+                >
                   <NumberInput
-                    id="validation-months"
-                    min={1}
-                    max={12}
-                    value={draft.validationMonths}
-                    onChange={(e) =>
-                      setDraft({ ...draft, validationMonths: Number(e.target.value) })
+                    id="machine-hours"
+                    min={200}
+                    max={600}
+                    step={1}
+                    value={draft.machineHoursDefault}
+                    onChange={(event) =>
+                      setDraft({ ...draft, machineHoursDefault: Number(event.target.value) })
                     }
                   />
                 </Field>
@@ -190,15 +153,15 @@ export function Settings() {
 
               <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {dirty ? 'Unsaved changes.' : 'Saved values are shared across the workspace.'}
+                  {dirty
+                    ? "Unsaved changes."
+                    : data?.datasetLabel
+                      ? `Saved values apply to the ${data.datasetLabel}.`
+                      : "Saved values are shared across the workspace."}
                 </p>
-                <Button
-                  variant="primary"
-                  onClick={() => void save()}
-                  disabled={saving || !dirty}
-                >
+                <Button variant="primary" onClick={() => void save()} disabled={saving || !dirty}>
                   <Save className="h-4 w-4" />
-                  {saving ? 'Saving…' : 'Save settings'}
+                  {saving ? "Saving…" : "Save settings"}
                 </Button>
               </div>
             </>
@@ -208,17 +171,26 @@ export function Settings() {
 
       <Card>
         <CardHeader>
-          <CardTitle>System Information</CardTitle>
+          <CardTitle>System information</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2 text-sm">
             <p className="flex items-center gap-2">
-              <Database className="h-4 w-4 text-slate-400" />
-              <span className="font-medium">API:</span> {import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api/v1'}
+              <Database className="h-4 w-4 text-slate-400" aria-hidden />
+              <span className="font-medium">API:</span>{" "}
+              {import.meta.env.VITE_API_URL ?? "http://localhost:4000/api/v1"}
             </p>
-            <p><span className="font-medium">Data source:</span> PostgreSQL via Drizzle ORM</p>
-            <p><span className="font-medium">Analytics engine:</span> Server-computed descriptive, predictive and prescriptive models</p>
-            <p><span className="font-medium">Version:</span> Phase 2 — Full-stack</p>
+            <p>
+              <span className="font-medium">Data source:</span> PostgreSQL via Drizzle ORM
+            </p>
+            <p>
+              <span className="font-medium">Analytics:</span> Server-computed descriptive,
+              predictive and prescriptive models
+            </p>
+            <p>
+              <span className="font-medium">Seeded dataset:</span> 60 customers · 192 orders · 192
+              payments · 60 machine days · 50 campaigns
+            </p>
           </div>
         </CardContent>
       </Card>

@@ -8,10 +8,6 @@ export interface AuthUser {
   email: string;
   role: AuthRole;
   roleLevel: number;
-  /** Assigned branch for managers; null for global accounts. */
-  branchId: string | null;
-  branchName: string | null;
-  branchCity: string | null;
 }
 
 export interface LoginResponse {
@@ -20,13 +16,9 @@ export interface LoginResponse {
   user: AuthUser;
 }
 
-/** Where each role lands after sign-in. */
+/** Labels shown in the account menu and login hints. */
 export const ROLE_LABELS: Record<AuthRole, string> = {
-  admin: "Main Administrator",
+  admin: "Administrator",
   analyst: "Business Analyst",
-  manager: "Branch Manager",
+  manager: "Manager",
 };
-
-export function isBranchManager(user: AuthUser | null): boolean {
-  return user?.role === "manager";
-}
